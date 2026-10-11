@@ -8,7 +8,7 @@ import {
 import { FloatMessage, OscMessage, Reaper, RecordMonitoringMode, StringMessage, Track, TrackFx } from 'reaper-osc'
 import { ModuleContext } from './index'
 import { BasicTextInput } from './inputs'
-import { GetTrack, GetTrackFx } from './helpers'
+import { GetTrack, GetTrackFx, SetReaperExtState } from './helpers'
 
 export enum ActionId {
 	// Transport
@@ -60,6 +60,7 @@ export enum ActionId {
 	CustomAction = 'custom_action',
 	RefreshOrc = 'refresh_osc',
 	CustomMessage = 'custom_message',
+	SaveProject = 'save_project',
 }
 
 export type ActionContext = ModuleContext
@@ -255,6 +256,43 @@ export function GetActionsList(getContext: () => ActionContext): CompanionAction
 				}
 
 				context.reaper.sendOscMessage(message)
+			},
+		},
+		[ActionId.SaveProject]: {
+			name: 'Save Project',
+			description:
+				'Saves the project. If it has never been saved, saves it with the name below. Requires the companion_save_project.lua script (see HELP).',
+			options: [
+				BasicTextInput('Name (used only if not yet saved)', 'name', undefined, true, true),
+				BasicTextInput('Folder (optional, overrides module setting)', 'folder', undefined, false, true),
+			],
+			callback: async (evt, ctx) => {
+				const context = getContext()
+				const config = context.config
+
+				const scriptId = config.saveScriptId?.trim()
+				if (!scriptId) {
+					context.log('error', 'Save Project: set the Save Script Command ID in the module config')
+					return
+				}
+
+				const name = (await ctx.parseVariablesInString(String(evt.options.name ?? ''))).trim()
+				const folder = (await ctx.parseVariablesInString(String(evt.options.folder ?? ''))).trim()
+
+				const port = config.webPort ?? 8080
+				const targetFolder = folder || config.saveFolder?.trim() || ''
+
+				try {
+					// Values are cleared by the script after use, so only send what is set.
+					// Slashes in the folder are swapped for "|" (illegal in paths) so they survive the URL.
+					if (name) await SetReaperExtState(config.host, port, 'name', name)
+					if (targetFolder) await SetReaperExtState(config.host, port, 'folder', targetFolder.replace(/[\\/]/g, '|'))
+				} catch (err) {
+					context.log('error', `Save Project: could not reach the REAPER web interface: ${String(err)}`)
+					return
+				}
+
+				context.reaper.triggerAction(scriptId)
 			},
 		},
 		[ActionId.RefreshOrc]: BasicAction('Refresh OSC', getContext, (reaper) => reaper.refreshControlSurfaces()),

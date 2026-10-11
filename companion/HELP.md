@@ -59,6 +59,20 @@ This module connects to the Cockos Reaper software.
 - Track FX Unbypass
 - Track FX Close UI
 - Custom Action
+- Save Project
+
+### Save Project setup
+
+Saves the project if it already has a file name. If it has never been saved, it saves it using the name you type (variables allowed, e.g. `$(custom:service_date)_Sunday`).
+
+One-time setup on each REAPER computer:
+
+1. REAPER > Preferences > Control/OSC/web > Add > Web browser interface. Note the port.
+2. REAPER > Actions > Show action list > New action > Load ReaScript, and pick `companion_save_project.lua` (in the `reaper-scripts` folder of this module's repo).
+3. Right click that action in the list > Copy selected action command ID.
+4. In the module config, fill in Web Interface Port, Save Script Command ID, and optionally Save Folder.
+
+Requires a REAPER version that supports `Main_SaveProjectEx`.
 
 ### Available feedbacks
 

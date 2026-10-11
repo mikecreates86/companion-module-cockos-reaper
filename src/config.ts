@@ -7,6 +7,9 @@ export interface ModuleConfig {
 	refreshOnInit: boolean
 	numberOfTracks: number
 	numberOfFx: number
+	webPort?: number
+	saveScriptId?: string
+	saveFolder?: string
 }
 
 export function GetConfigFields(): SomeCompanionConfigField[] {
@@ -73,6 +76,33 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			min: 1,
 			max: 512,
 			default: 8,
+		},
+		{
+			type: 'number',
+			id: 'webPort',
+			label: 'Web Interface Port',
+			width: 3,
+			tooltip:
+				'Only needed for the "Save Project" action. The port of the REAPER web browser interface (Preferences > Control/OSC/web).',
+			min: 1,
+			max: 65535,
+			default: 8080,
+		},
+		{
+			type: 'textinput',
+			id: 'saveScriptId',
+			label: 'Save Script Command ID',
+			width: 9,
+			tooltip:
+				'Only needed for the "Save Project" action. The command ID of companion_save_project.lua in the REAPER Actions list (e.g. _RS1234abcd...).',
+		},
+		{
+			type: 'textinput',
+			id: 'saveFolder',
+			label: 'Save Folder',
+			width: 12,
+			tooltip:
+				'Only needed for the "Save Project" action. Folder on the REAPER computer used the first time a project is saved. Leave blank to use REAPER\'s default recording path.',
 		},
 	]
 }

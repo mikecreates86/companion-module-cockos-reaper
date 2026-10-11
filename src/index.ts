@@ -16,6 +16,7 @@ import { CreateNumberOfTracksDefaultsUpgradeScript, CreateUseInvertForFeedbacksU
 
 class ControllerInstance extends InstanceBase<ModuleConfig> {
 	private _reaper: Reaper | null
+	private _config: ModuleConfig = {} as ModuleConfig
 	private _unsubscribeVariables: Unsubscribe[] = []
 	private _feedbackBindings: FeedbackBindings = {}
 	private _customMessageFeedbacks: CustomMessageFeedbacks = {}
@@ -30,7 +31,11 @@ class ControllerInstance extends InstanceBase<ModuleConfig> {
 		await this.configUpdated(config)
 
 		this.setActionDefinitions(
-			GetActionsList(() => ({ reaper: this._reaper!, log: (level, message) => this.log(level, message) }))
+			GetActionsList(() => ({
+				reaper: this._reaper!,
+				log: (level, message) => this.log(level, message),
+				config: this._config,
+			}))
 		)
 
 		this.setPresetDefinitions(GetPresetsList())
@@ -38,6 +43,7 @@ class ControllerInstance extends InstanceBase<ModuleConfig> {
 			GetFeedbacksList(() => ({
 				reaper: this._reaper!,
 				log: (level, message) => this.log(level, message),
+				config: this._config,
 				checkFeedback: (feedbackId) => this.checkFeedbacksById(feedbackId),
 				bindings: this._feedbackBindings,
 				customMessageFeedbacks: this._customMessageFeedbacks,
@@ -46,6 +52,7 @@ class ControllerInstance extends InstanceBase<ModuleConfig> {
 	}
 
 	public async configUpdated(config: ModuleConfig): Promise<void> {
+		this._config = config
 		if (this._reaper !== null) {
 			await this.disconnectOsc()
 			this.unbindVariables()
@@ -188,6 +195,7 @@ class ControllerInstance extends InstanceBase<ModuleConfig> {
 export interface ModuleContext {
 	readonly reaper: Reaper
 	readonly log: (level: LogLevel, message: string) => void
+	readonly config: ModuleConfig
 }
 
 type Unsubscribe = () => void
